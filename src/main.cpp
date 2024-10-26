@@ -16,6 +16,10 @@ float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
 const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/V3_ota_meta_data/version.json";
 const char *currentVersion = "1.5.0";
+ bool Hflag = false;
+
+unsigned long previousMillis = 0; // Stores the last time the internet was checked
+const unsigned long wifiCheckInterval = 60000; // 1 minute in milliseconds
 
 void setup() {
   Serial.begin(115200);
@@ -28,6 +32,7 @@ void setup() {
   initCT();
   if (!Sflag &&!connectToWiFi()){
     initHotspot();
+    Hflag = true;
   } else{
   
     checkAndUpdateFirmware(versionUrl,currentVersion);
@@ -45,6 +50,25 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= wifiCheckInterval) {
+    previousMillis = currentMillis;
+    if (WiFi.status() == WL_CONNECTED) {
+      if (Hflag) {
+        deactivateHotspot();
+        Hflag = false;
+      }
+    } else {
+      if (!connectToWiFi()){
+        if (!Hflag){
+          initHotspot();
+          Hflag = true;
+        }
+      }
+
+    }
+  }
+
   // accumulateIrmsValues();
   if (publishIrmsData()){
     // for (int i = 0; i < 6; i++) {

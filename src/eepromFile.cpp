@@ -39,9 +39,6 @@ void CheckEpromData() {
     Mflag = true; 
     Serial.println("MFidFlag "+String(Mflag));
   }
-    
-  
-
 }
 
 void saveToEEPROM(int startAddr, String data) {

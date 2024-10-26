@@ -5,6 +5,7 @@
 #include "otaControl.h"
 #include <WiFi.h>
 
+
 bool connectToWiFi() {
     #ifdef DEBUG_ENABLED
     Serial.println("Connecting to WiFi...");
@@ -26,9 +27,6 @@ bool connectToWiFi() {
     // Check connection status
     if (WiFi.status() == WL_CONNECTED) {
         digitalWrite(led_Pin, HIGH);
-        if (WiFi.getMode() == WIFI_AP){
-            deactivateHotspot();
-        }
         #ifdef DEBUG_ENABLED
         Serial.println("\nConnected to Wi-Fi");
         Serial.println("Network Details:");
@@ -52,8 +50,17 @@ bool isWifiConnected() {
 }
 
 void initHotspot() {
+    const char *Apid;
+    String mfidAP = readStringFromEEPROM(MFCODE_ADDR);
+    if (isValidString(mfidAP)){
+        Apid = mfidAP.c_str();
+    }
+    else {
+        Apid = "EPVI";
+    }
+
     // Initialize the hotspot (Access Point) with SSID and Password
-    if (!WiFi.softAP("EPVI", "EPVI12345")) {
+    if (!WiFi.softAP(Apid, "EPVI12345")) {
         #ifdef DEBUG_ENABLED
         Serial.println("Failed to create AP");
         #endif
@@ -72,7 +79,7 @@ void initHotspot() {
 
 void deactivateHotspot() {
   // Disable the Wi-Fi Access Point (Hotspot)
-  WiFi.softAPdisconnect(true);
+  WiFi.softAPdisconnect(false);
 
   Serial.println("Hotspot deactivated.");
 }
