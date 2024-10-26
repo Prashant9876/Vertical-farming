@@ -51,10 +51,11 @@ void reconnect() {
             Serial.print("Attempting MQTT connection...");
             // Attempt to connect
             String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
+            String devicemac_string  =  WiFi.macAddress();
             String subTopic = Subtopic();
                 Serial.print("17 Free heap memory: ");
                 Serial.println(esp_get_free_heap_size());
-            if (client.connect(deviceId_str.c_str(), mqttUser, mqttPassword)) {
+            if (client.connect(devicemac_string.c_str(), mqttUser, mqttPassword)) {
                 digitalWrite(2,HIGH);      // for turning on the leds
                 Serial.print("alpha123 Free heap memory: ");
                 Serial.println(esp_get_free_heap_size());
@@ -255,14 +256,13 @@ bool publishIrmsData() {
                 relayState += "0";  // If the relay is OFF (false), add '0'
                 }
             }
-            String publish = "publish/" + deviceId_str;
-            StaticJsonDocument<350> jsonDoc; // Adjust size as needed
+            StaticJsonDocument<512> jsonDoc; // Adjust size as needed
             // Add the device ID to the JSON object
             unsigned long elapsedTime = currentMillis - lastPublishTime;
             lastPublishTime = currentMillis;
             float elapsedTime12 = elapsedTime/1000;
             jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
-            jsonDoc["HK"] = "";
+            // jsonDoc["HK"] = "";
             jsonDoc["voltage"] = "0";
 
             // Add IrmsTotal values as separate fields
@@ -270,16 +270,17 @@ bool publishIrmsData() {
                 String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.
                 jsonDoc[fieldName] = String(Irms[i], 2); // Add each value to the JSON object
             }
-            jsonDoc["samples"] = 12.00;
-            jsonDoc["zerror"] = 13.00;
+            // jsonDoc["samples"] = 12.00;
+            // jsonDoc["zerror"] = 13.00;
             jsonDoc["status"] = relayState.c_str();
             jsonDoc["freq"] = elapsedTime12;
-            jsonDoc["RSSI"] = String(Rssi);
+            // jsonDoc["RSSI"] = Rssi;
             jsonDoc["data"] = "live";
             // Serialize JSON to a string
             String jsonString;
             serializeJson(jsonDoc, jsonString);
             Serial.println("jsonString"+ jsonString);
+            String publish =  String(publishTopic) + deviceId_str;
             if (client.publish(publish.c_str(),jsonString.c_str())){
                 Serial.println("MQTT published");
                 IrmsDataPublish = true;
