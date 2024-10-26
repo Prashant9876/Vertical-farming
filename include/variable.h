@@ -22,6 +22,8 @@
 
 #define TIMER_PIN 12
 
+#define led_Pin 2
+
 #define CT_PIN_1  36  // Sensor 1 input pin
 #define CT_PIN_2  39  // Sensor 2 input pin
 #define CT_PIN_3  34  // Sensor 3 input pin (replace A2 with GPIO34)
@@ -32,6 +34,7 @@
 extern bool shouldRestart;
 extern bool Dflag;
 extern bool Mflag;
+extern bool Sflag;
 
 extern unsigned long lastPublishTime;
 

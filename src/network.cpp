@@ -15,12 +15,17 @@ bool connectToWiFi() {
     
     int attempts = 0;  // Keep track of connection attempts
     while (WiFi.status() != WL_CONNECTED && attempts < 40) {
-        delay(500);
+        digitalWrite(led_Pin, HIGH);
+        delay(100);
+        digitalWrite(led_Pin, LOW);
+        delay(100);
+        delay(300);
         Serial.print(".");
         attempts++;
     }
     // Check connection status
     if (WiFi.status() == WL_CONNECTED) {
+        digitalWrite(led_Pin, HIGH);
         if (WiFi.getMode() == WIFI_AP){
             deactivateHotspot();
         }

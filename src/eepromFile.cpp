@@ -7,6 +7,8 @@
 
 bool Dflag = false;
 bool Mflag = false;
+bool Sflag = false;
+
 
 void initEEPROM() {
     if (!EEPROM.begin(EEPROM_SIZE)) {
@@ -23,6 +25,8 @@ void CheckEpromData() {
   String mfid = readStringFromEEPROM(MFCODE_ADDR);
   if (!isValidString(ssid)) {
     saveToEEPROM(SSID_ADDR,"EPVI");
+    Sflag = true;
+    
   }
   if (!isValidString(pwd)) {
     saveToEEPROM(PASSWORD_ADDR,"EPVI12345");

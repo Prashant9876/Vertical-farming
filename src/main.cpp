@@ -14,8 +14,8 @@
 bool shouldRestart = false;
 float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
-const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
-const char *currentVersion = "1.4.0";
+const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/V3_ota_meta_data/version.json";
+const char *currentVersion = "1.5.0";
 
 void setup() {
   Serial.begin(115200);
@@ -26,7 +26,7 @@ void setup() {
   readRelayStatesFromEEPROM();
   readCtCutoffFromEEPROM();
   initCT();
-  if (!connectToWiFi()){
+  if (!Sflag &&!connectToWiFi()){
     initHotspot();
   } else{
   

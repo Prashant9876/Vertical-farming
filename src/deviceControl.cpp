@@ -24,6 +24,7 @@ void initRelays(){
     pinMode(RELAY_PIN_5, OUTPUT);
     pinMode(RELAY_PIN_6, OUTPUT);
     pinMode(TIMER_PIN, OUTPUT);
+    pinMode(led_Pin, OUTPUT);
     digitalWrite(TIMER_PIN, HIGH);
 }
 
