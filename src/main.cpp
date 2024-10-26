@@ -14,8 +14,8 @@
 bool shouldRestart = false;
 float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
-const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/V3_ota_meta_data/version.json";
-const char *currentVersion = "1.5.0";
+const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
+const char *currentVersion = "2.0.0";
  bool Hflag = false;
 
 unsigned long previousMillis = 0; // Stores the last time the internet was checked
