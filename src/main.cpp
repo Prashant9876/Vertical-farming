@@ -15,7 +15,7 @@ bool shouldRestart = false;
 float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
 const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
-const char *currentVersion = "2.0.0";
+const char *currentVersion = "2.1.0";
  bool Hflag = false;
 
 unsigned long previousMillis = 0; // Stores the last time the internet was checked
@@ -23,7 +23,6 @@ const unsigned long wifiCheckInterval = 60000; // 1 minute in milliseconds
 
 void setup() {
   Serial.begin(115200);
-
   initEEPROM();
   CheckEpromData();
   initRelays();
@@ -34,18 +33,16 @@ void setup() {
     initHotspot();
     Hflag = true;
   } else{
-  
     checkAndUpdateFirmware(versionUrl,currentVersion);
-
-    initMqtt();
+    if (!Dflag && !Mflag ) {
+      initMqtt();
+      reconnect();
+    }
     digitalWrite(2,LOW);
   }
   // void initBT();
   initOTA();
   initializeRoutes();
-  if (!Dflag && !Mflag ) {
-    reconnect();
-  }
 
 }
 

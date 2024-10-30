@@ -16,6 +16,7 @@ bool connectToWiFi() {
     
     int attempts = 0;  // Keep track of connection attempts
     while (WiFi.status() != WL_CONNECTED && attempts < 40) {
+        WiFi.setSleep(false); 
         digitalWrite(led_Pin, HIGH);
         delay(100);
         digitalWrite(led_Pin, LOW);

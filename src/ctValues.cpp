@@ -18,8 +18,8 @@ void initCT() {
 
     int startupCounter = 0;  // Initialize counter
     float Irms[6];  // Array to store Irms values
-
-    // Loop to ignore the first 10 readings
+    Serial.println("Startup readings ignored. Proceeding with actual measurements...");
+    // Loop to ignore the first 10 readings 
     while (startupCounter < 10) {
         Irms[0] = ZMCT102_1.calcIrms(1480);
         Irms[1] = ZMCT102_2.calcIrms(1480);
@@ -27,12 +27,9 @@ void initCT() {
         Irms[3] = ZMCT102_4.calcIrms(1480);
         Irms[4] = ZMCT102_5.calcIrms(1480);
         Irms[5] = ZMCT102_6.calcIrms(1480);
-
-        Serial.println("Ignoring startup readings...");
         delay(1000);  // Wait for 1 second between each reading
         startupCounter++;  // Increment counter
     }
-    Serial.println("Startup readings ignored. Proceeding with actual measurements...");
 
 }
 

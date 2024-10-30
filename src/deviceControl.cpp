@@ -34,8 +34,7 @@ void readRelayStatesFromEEPROM() {
         Serial.println("Relay " + String(i + 1) + ": " + String(relayStates[i]));
         if (relayStates[i]){
             digitalWrite(relayPins[i],LOW);
-        } else {
-            digitalWrite(relayPins[i],HIGH);
+            delay(1000);
         }
     }
 }
@@ -44,5 +43,6 @@ void readCtCutoffFromEEPROM() {
     // Read relay states from EEPROM based on the addresses in RelayAddresses
     for (int i = 0; i < 6; ++i) {
         maxLoadOnCt[i] = readFromEEPROM<int>(ctloadddresses[i]);
+        delay(100);
     }
 }

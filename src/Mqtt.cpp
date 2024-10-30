@@ -30,14 +30,8 @@ const char *publishTopic = "publish/";
 void initMqtt() {
     if (isWifiConnected()){
         client.setServer(mqttServer, mqttPort);
-        Serial.print("10 Free heap memory: ");
-        Serial.println(esp_get_free_heap_size());
         client.setCallback(callback);
-        Serial.print("11 Free heap memory: ");
-        Serial.println(esp_get_free_heap_size());
         client.setKeepAlive(40);
-        Serial.print("12 Free heap memory: ");
-        Serial.println(esp_get_free_heap_size());
         delay(1000);
     }
 }
@@ -219,6 +213,7 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
 void mqttLoop() {
     if (!client.connected()&& isWifiConnected() ) {
         Serial.println("disconnected try to connecting");
+        initMqtt();
         reconnect();
     }
     // else {
