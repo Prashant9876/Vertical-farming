@@ -69,7 +69,15 @@ String readStringFromEEPROM(int startAddr) {
 
 void writeIntToEEPROM(int address, int value) {
     EEPROM.put(address, value);  // Store the integer value at the given address
-    EEPROM.commit();  // Commit changes to EEPROM (for ESP32, not needed for Arduino)
+    EEPROM.commit();  // Commit changes to EEPROM (for ESP32)
+}
+
+bool readBoolFromEEPROM(int address) {
+    // Read the byte from the specified address
+    uint8_t storedValue = EEPROM.read(address);
+
+    // Return true if the value is 1, false if it is 0
+    return (storedValue == 1);
 }
 
 bool isValidString(String str) {
@@ -101,4 +109,11 @@ void writeBoolToEEPROM(int address, bool value) {
     // Convert the boolean value to an integer (0 or 1)
     EEPROM.write(address, value ? 1 : 0);
     EEPROM.commit(); // Ensure the data is written to EEPROM
+}
+
+void storeFloatInEEPROM(int address, float value) {
+  EEPROM.put(address, value);  // Write the float to EEPROM at the given address
+  EEPROM.commit();  // Commit the changes to ensure they are saved to EEPROM
+  Serial.print("Stored float: ");
+  Serial.println(value);  // Print the stored float for debugging
 }

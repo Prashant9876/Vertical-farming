@@ -11,6 +11,8 @@ void writeIntToEEPROM(int address, int value);
 String Subtopic();
 bool isValidString(String str);
 void writeBoolToEEPROM(int address, bool value);
+void storeFloatInEEPROM(int address, float value);
+bool readBoolFromEEPROM(int address);
 
 
 template<typename T>
@@ -19,6 +21,7 @@ T readFromEEPROM(int address) {
     EEPROM.get(address, value);  // Retrieve the value from EEPROM based on the data type
     return value;  // Return the retrieved value
 }
+
 
 
 #endif

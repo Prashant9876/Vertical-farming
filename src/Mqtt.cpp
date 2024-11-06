@@ -11,7 +11,6 @@
 #include "network.h"
 
 unsigned long timeoutDuration = 1 * 60 * 1000;
-unsigned long previousMillisPublishIrms=0;
 unsigned long lastPublishTime = 0;
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -38,23 +37,17 @@ void initMqtt() {
 
 void reconnect() {
     unsigned long startTime = millis();  
-    Serial.print("16 Free heap memory: ");
-    Serial.println(esp_get_free_heap_size());   
-     if (isWifiConnected()){     
+    if (isWifiConnected()){     
         while (!client.connected()) {
-            Serial.print("Attempting MQTT connection...");
+            Serial.println(F("Attempting MQTT connection..."));
             // Attempt to connect
             String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
             String devicemac_string  =  WiFi.macAddress();
             String subTopic = Subtopic();
-                Serial.print("17 Free heap memory: ");
-                Serial.println(esp_get_free_heap_size());
             if (client.connect(devicemac_string.c_str(), mqttUser, mqttPassword)) {
                 digitalWrite(2,HIGH);      // for turning on the leds
-                Serial.print("alpha123 Free heap memory: ");
-                Serial.println(esp_get_free_heap_size());
                 client.subscribe(subTopic.c_str());  // Subscribe to device topics
-                Serial.println("connected to MQTT server");
+                Serial.println(F("connected to MQTT server"));
             } else {
                 Serial.print("failed, rc=");
                 Serial.print(client.state());
@@ -71,22 +64,6 @@ void reconnect() {
         }
     }
 }
-
-       
-//         // else {
-//         // String jsonResponse = String("{\"deviceId\": \"") + deviceId + "\", ";
-//         // for (int i = 0; i < 6; ++i) {
-//         //     int offilinectdata = readFromEEPROM<int>(ctofflinedataaddress[i]);
-//         //     jsonResponse += String("\"current") + String(i + 1) + String("\": ") + String(offilinectdata);
-//         //     if (i < 5) { // Add a comma after all but the last item
-//         //         jsonResponse += String(", ");
-//         //     }
-//         // }
-//         // jsonResponse += String("}");
-
-//         // client.publish("device/data",jsonResponse.c_str());
-//         // }
-//     }
 
 void callback(char* topic, byte* payload, unsigned int length) {   //// this is my function to listen to our subtopic 
     Serial.print("Received [");
@@ -215,20 +192,14 @@ void mqttLoop() {
         Serial.println("disconnected try to connecting");
         initMqtt();
         reconnect();
-    }
-    // else {
-    //     String jsonResponse = String("{\"deviceId\": \"") + deviceId + "\", ";
-    //     for (int i = 0; i < 6; ++i) {
-    //         int offilinectdata = readFromEEPROM<int>(ctofflinedataaddress[i]);
-    //         jsonResponse += String("\"current") + String(i + 1) + String("\": ") + String(offilinectdata);
-    //         if (i < 5) { // Add a comma after all but the last item
-    //             jsonResponse += String(", ");
-    //         }
-    //     }
-    //     jsonResponse += String("}");
 
-    //     client.publish("device/data",jsonResponse.c_str());
-    // }
+    }
+    if (mqttFlag && client.connected()){
+       Serial.println("publishing offline data");
+        publishOfflinedata(); 
+        mqttFlag = false;
+        writeBoolToEEPROM(mqttFlagAddress,0);
+    }
     client.loop();
 }
 
@@ -237,57 +208,72 @@ bool publishIrmsData() {
     bool IrmsDataPublish = false;
     unsigned long currentMillis = millis();
     // Check if 15 seconds (15000 ms) has passed
-    if (isWifiConnected()) {
-        if (currentMillis - previousMillisPublishIrms >= 15000) {
-            previousMillisPublishIrms = currentMillis;
-            instantrmsvalue();
-            int Rssi = WiFi.RSSI();
-            String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
-            String relayState = ""; 
-            for (int i = 0; i < 6; i++) {
-                if (relayStates[i]) {
-                    relayState += "1";  // If the relay is ON (true), add '1'
-                } else {
-                relayState += "0";  // If the relay is OFF (false), add '0'
-                }
-            }
-            StaticJsonDocument<512> jsonDoc; // Adjust size as needed
-            // Add the device ID to the JSON object
-            unsigned long elapsedTime = currentMillis - lastPublishTime;
-            lastPublishTime = currentMillis;
-            float elapsedTime12 = elapsedTime/1000;
-            jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
-            // jsonDoc["HK"] = "";
-            jsonDoc["voltage"] = "0";
-
-            // Add IrmsTotal values as separate fields
-            for (int i = 0; i < 6; i++) {
-                String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.
-                jsonDoc[fieldName] = String(Irms[i], 2); // Add each value to the JSON object
-            }
-            // jsonDoc["samples"] = 12.00;
-            // jsonDoc["zerror"] = 13.00;
-            jsonDoc["status"] = relayState.c_str();
-            jsonDoc["freq"] = elapsedTime12;
-            // jsonDoc["RSSI"] = Rssi;
-            jsonDoc["data"] = "live";
-            // Serialize JSON to a string
-            String jsonString;
-            serializeJson(jsonDoc, jsonString);
-            Serial.println("jsonString"+ jsonString);
-            String publish =  String(publishTopic) + deviceId_str;
-            if (client.publish(publish.c_str(),jsonString.c_str())){
-                Serial.println("MQTT published");
-                IrmsDataPublish = true;
-            }
-            else{
-                 Serial.println(" Not published to mqtt");
-            }
-            for (int i = 0; i <6; i++) {
-                Irms[i] = 0; // Set each element to 0
-            }
+    instantrmsvalue();
+    String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
+    String relayState = ""; 
+    for (int i = 0; i < 6; i++) {
+        if (relayStates[i]) {
+            relayState += "1";  // If the relay is ON (true), add '1'
+        } else {
+            relayState += "0";  // If the relay is OFF (false), add '0'
         }
-        IrmsDataPublish = false;
     }
+    StaticJsonDocument<512> jsonDoc; // Adjust size as needed
+    // Add the device ID to the JSON object
+    unsigned long elapsedTime = currentMillis - lastPublishTime;
+    lastPublishTime = currentMillis;
+    float elapsedTime12 = elapsedTime/1000;
+    jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
+    jsonDoc["voltage"] = "0";
+    // Add IrmsTotal values as separate fields
+    for (int i = 0; i < 6; i++) {
+        String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.
+        jsonDoc[fieldName] = String(Irms[i], 2); // Add each value to the JSON object
+    }
+    jsonDoc["status"] = relayState.c_str();
+    jsonDoc["freq"] = elapsedTime12;
+    jsonDoc["data"] = "live";
+    // Serialize JSON to a string
+    String jsonString;
+    serializeJson(jsonDoc, jsonString);
+    Serial.println("jsonString"+ jsonString);
+    String publish =  String(publishTopic) + deviceId_str;
+    if (client.publish(publish.c_str(),jsonString.c_str())){
+        Serial.println("MQTT published");
+        IrmsDataPublish = true;
+    }
+    else{
+        Serial.println(" Not published to mqtt");
+    }
+    Serial.println("IrmsDataPublish : " + String(IrmsDataPublish));
     return IrmsDataPublish;
+}
+
+void publishOfflinedata() {
+    String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
+    uint16_t intervals = readFromEEPROM<uint16_t>(offlineintervaladdress);
+    StaticJsonDocument<512> jsonDoc;
+    jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
+    jsonDoc["voltage"] = 0;
+    jsonDoc["data"] = "log";  // Add device ID
+    jsonDoc["intervals"] = intervals;
+    for (int i = 0; i < 6; i++) {
+        String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.
+        float offlineValue = readFromEEPROM<float>(ctofflinedataaddress[i]);
+        jsonDoc[fieldName] = String(offlineValue, 2);
+    }
+    String jsonString;
+    serializeJson(jsonDoc, jsonString);
+    Serial.println("jsonString : "+ jsonString);
+    String publish =  String(publishTopic) + deviceId_str;
+    if (client.publish(publish.c_str(),jsonString.c_str())){
+        Serial.println(F("offline CT Data is published to mqtt"));
+        // make the offline stored ct value to zero.
+        for (int i = 0; i < 6; i++) {
+            storeFloatInEEPROM(ctofflinedataaddress[i], 0.00);
+        }
+        writeIntToEEPROM(offlineintervaladdress, 0);
+    } else{
+        Serial.println(F(" offline CT Data is not  published to mqtt"));
+    }
 }

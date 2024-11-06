@@ -66,7 +66,9 @@ void instantrmsvalue() {
     Irms[5] = ZMCT102_6.calcIrms(1480);
     for (int i = 0; i < 6; i++) {
         if (maxLoadOnCt[i] <= Irms[i]) {
-                digitalWrite(relayPins[i], LOW); // Use relayPins array for flexibility
+            digitalWrite(relayPins[i], HIGH); // Use relayPins array for flexibility
+            // add code to send a notification for High Current load on the device 
+            delay(1000);
         }
     }
     for (int i = 0; i < 6; i++) {
