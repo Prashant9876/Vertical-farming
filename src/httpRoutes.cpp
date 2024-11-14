@@ -15,6 +15,8 @@ void initializeRoutes() {
     server.on("/configure", HTTP_POST, handleConfiguration);
     server.on("/status", HTTP_GET, getStatus);
     server.on("/restart-device", HTTP_POST, handleRestartDevice);
+    server.on("/config-MFID", HTTP_POST, handleconfigMFID);
+    server.on("/config-DeviceID", HTTP_POST, handleconfigDeviceID);
     server.onNotFound(handleNotFound);
     Serial.println("Http routes enabled");
     Serial.println("Initialized http routes");
@@ -35,7 +37,7 @@ void getStatus() {
     Serial.println("Entered getStatus route");
 
     // Create a JSON object for status
-    DynamicJsonDocument statusDocument(256);
+    DynamicJsonDocument statusDocument(300);
 
     // Check the ESP Chip Id
     statusDocument["ssid"] = readStringFromEEPROM(SSID_ADDR);
@@ -57,6 +59,9 @@ void getStatus() {
 
     statusDocument["mfid"] = readStringFromEEPROM(SSID_ADDR);
     statusDocument["dGroup"] = readStringFromEEPROM(GROUPID_ADDR);
+    statusDocument["mac_address"] = String(ESP.getEfuseMac(), HEX);
+    statusDocument["mqttClientId"] = WiFi.macAddress();
+    statusDocument["currentVersion"] = currentVersion;
     String statusJson;
     serializeJson(statusDocument, statusJson);
 
@@ -73,6 +78,85 @@ void getStatus() {
 void handleHttpClient() {
     server.handleClient();
 }
+
+void handleconfigMFID(){ 
+    StaticJsonDocument<256> jsonDocument;
+    if (server.hasArg("plain")) {
+        String jsonPayload = server.arg("plain");
+        Serial.println("Received JSON: " + jsonPayload); // Log the received JSON
+
+        DeserializationError error = deserializeJson(jsonDocument, jsonPayload);
+        
+        if (error) {
+            Serial.println("Failed to deserialize JSON");
+            server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+            return;
+        }
+
+        if (jsonDocument.containsKey("command")) {
+            const char* command = jsonDocument["command"];
+            const char* password = jsonDocument["password"];
+            if (strcmp(command, "newMFID") == 0  && (strcmp(password, "Ayush") == 0) ) {
+                String mfid = jsonDocument["mfid"];
+                String mfcode = mfid;
+                mfcode.toLowerCase();
+
+                if (mfcode.length() == 0 || !mfcode.startsWith("mf")) {
+                    saveToEEPROM(MFCODE_ADDR, mfid);
+                    server.send(200, "application/json", "{\"message\":\"Configuration updated successfully\"}");
+                    shouldRestart = true;
+
+                } else {
+                    server.send(400, "application/json", "{\"error\":\"invalid Mfid\"}");
+                }
+            } else {
+                server.send(400, "application/json", "{\"error\":\"invalid command or password\"}");
+            }
+        } else {
+            server.send(400, "application/json", "{\"error\":\"Command not found\"}");
+        }
+    } else {
+        server.send(400, "application/json", "{\"error\":\"No payload\"}");
+    }
+}
+
+void handleconfigDeviceID() {
+    StaticJsonDocument<256> jsonDocument;
+    if (server.hasArg("plain")) {
+        String jsonPayload = server.arg("plain");
+        Serial.println("Received JSON: " + jsonPayload); // Log the received JSON
+
+        DeserializationError error = deserializeJson(jsonDocument, jsonPayload);
+        
+        if (error) {
+            Serial.println("Failed to deserialize JSON");
+            server.send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+            return;
+        }
+
+        if (jsonDocument.containsKey("command")) {
+            const char* command = jsonDocument["command"];
+            
+            if (strcmp(command, "NewDeviceID") == 0) {
+                String deviceID = jsonDocument["deviceID"];
+                saveToEEPROM(DEVICEID_ADDR, deviceID);
+                delay(100);
+                server.send(200, "application/json", "{\"message\":\"Configuration updated successfully\"}");
+                shouldRestart = true;
+            }
+            else {
+                server.send(400, "application/json", "{\"error\":\"Command  DeviceID not found\"}");
+        }
+        } else {
+            server.send(400, "application/json", "{\"error\":\"Command  key not found\"}");
+        }
+    } else {
+        server.send(400, "application/json", "{\"error\":\"No payload\"}");
+    }
+
+
+}
+
 
 void handleConfiguration() {
     StaticJsonDocument<256> jsonDocument;

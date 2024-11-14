@@ -32,30 +32,6 @@ void initCT() {
     }
 
 }
-
-// void accumulateIrmsValues() {
-//     unsigned long currentMillis = millis();
-
-//     // Check if 1 second (1000 ms) has passed
-//     if (currentMillis - previousMillisIrms >= 1000) {
-//         previousMillisIrms = currentMillis;
-//         // Update Irms with new sensor values
-//         Irms[0] = ZMCT102_1.calcIrms(1480);
-//         Irms[1] = ZMCT102_2.calcIrms(1480);
-//         Irms[2] = ZMCT102_3.calcIrms(1480);
-//         Irms[3] = ZMCT102_4.calcIrms(1480);
-//         Irms[4] = ZMCT102_5.calcIrms(1480);
-//         Irms[5] = ZMCT102_6.calcIrms(1480);
-//         for (int i = 0; i < 6; i++) {
-//             if (maxLoadOnCt[i] <= Irms[i]) {
-//                 digitalWrite(relayPins[i], LOW); // Use relayPins array for flexibility
-//             }
-//             IrmsTotal[i] += Irms[i];
-//         }
-//     }
-// }
-
-
 void instantrmsvalue() {
 
     Irms[0] = ZMCT102_1.calcIrms(1480);
@@ -69,6 +45,7 @@ void instantrmsvalue() {
             digitalWrite(relayPins[i], HIGH); // Use relayPins array for flexibility
             // add code to send a notification for High Current load on the device 
             delay(1000);
+            Irms[i] = 0.00;
         }
     }
     for (int i = 0; i < 6; i++) {

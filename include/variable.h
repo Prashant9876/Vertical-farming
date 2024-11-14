@@ -38,6 +38,7 @@ extern bool Sflag;
 
 extern unsigned long lastPublishTime;
 
+extern const char *currentVersion;
 
 #define MAX_LENGTH 50
 

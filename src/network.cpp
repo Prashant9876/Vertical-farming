@@ -72,7 +72,7 @@ void initHotspot() {
     IPAddress IP = WiFi.softAPIP();
     #ifdef DEBUG_ENABLED
     Serial.println("Hotspot created successfully.");
-    Serial.print("SSID: EPVI\n");
+    Serial.println("SSID: " + String(Apid));
     Serial.print("IP Address: ");
     Serial.println(IP);
     #endif

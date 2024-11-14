@@ -102,7 +102,7 @@ void setup() {
       initMqtt();
       reconnect();
     }
-    digitalWrite(2,LOW);
+    // digitalWrite(2,LOW);
   }
   // void initBT();
   initOTA();

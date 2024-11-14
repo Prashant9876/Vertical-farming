@@ -9,5 +9,7 @@ void handleRestartDevice();
 void getStatus();
 void handleHttpClient();
 void handleConfiguration();
+void handleconfigMFID();
+void handleconfigDeviceID();
 
 #endif

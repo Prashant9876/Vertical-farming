@@ -44,6 +44,7 @@ void reconnect() {
             String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
             String devicemac_string  =  WiFi.macAddress();
             String subTopic = Subtopic();
+            Serial.println("subTopic : "+ subTopic);
             if (client.connect(devicemac_string.c_str(), mqttUser, mqttPassword)) {
                 digitalWrite(2,HIGH);      // for turning on the leds
                 client.subscribe(subTopic.c_str());  // Subscribe to device topics
@@ -69,9 +70,10 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
     Serial.print("Received [");
     Serial.print(topic);
     Serial.print("]: ");
-    Serial.println(reinterpret_cast<char *>(payload));
-    Serial.println(length);
-    Serial.println("...");
+    for (int i = 0; i < length; i++) {
+        Serial.print((char) payload[i]);
+    }
+    Serial.println();
 
 
     DynamicJsonDocument doc(256);
@@ -96,6 +98,7 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                     jsonDoc["d_group"] = readStringFromEEPROM(GROUPID_ADDR);
                     jsonDoc["deviceid"] = readStringFromEEPROM(DEVICEID_ADDR);
                     jsonDoc["mfcode"] = readStringFromEEPROM(MFCODE_ADDR);
+                    jsonDoc["mqttClientId"] =  WiFi.macAddress();
                     String response;
                     serializeJson(jsonDoc, response);
                     
@@ -122,7 +125,6 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                             bool jsonValue = doc[fieldName];
                             if (jsonValue != relayStates[i]) {
                                 relayStates[i] = jsonValue;
-                                writeBoolToEEPROM(RelayAddresses[i],jsonValue);
                                 Serial.println("pinState change of"+String(relayStates[i+1]+"to " +String(jsonValue)));
                                 if (jsonValue){
                                     digitalWrite(relayPins[i],LOW);
@@ -167,13 +169,23 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                         if (doc.containsKey(fieldName)) {
                             maxLoadOnCt[i] = doc[fieldName];
                             EEPROM.put(ctloadddresses[i], maxLoadOnCt[i]);
+                            delay(100);
                         }
                     }
                     EEPROM.commit();
+                    delay(1000);
+                    ESP.restart();
+
                 } else if  (String(command) == "ota") {
                     const String url = doc["otaurl"];
-                    const char * version = doc["version"];
-                    checkAndUpdateFirmware(url,"1.1.0");
+                    checkAndUpdateFirmware(url,currentVersion);
+
+                } else if  (String(command) == "deviceid") {
+                    String deviceid = doc["deviceid"];
+                    saveToEEPROM(DEVICEID_ADDR, deviceid);
+                    delay(100);
+                    shouldRestart = true;
+
                 } else {
                     Serial.println(F("invalid Mqtt command"));
                 }
@@ -223,7 +235,7 @@ bool publishIrmsData() {
     unsigned long elapsedTime = currentMillis - lastPublishTime;
     lastPublishTime = currentMillis;
     float elapsedTime12 = elapsedTime/1000;
-    jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
+    jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID 
     jsonDoc["voltage"] = "0";
     // Add IrmsTotal values as separate fields
     for (int i = 0; i < 6; i++) {
@@ -239,7 +251,7 @@ bool publishIrmsData() {
     Serial.println("jsonString"+ jsonString);
     String publish =  String(publishTopic) + deviceId_str;
     if (client.publish(publish.c_str(),jsonString.c_str())){
-        Serial.println("MQTT published");
+        Serial.println("IRMS DATA published on MQTT Topic "+ publish);
         IrmsDataPublish = true;
     }
     else{
@@ -252,10 +264,13 @@ bool publishIrmsData() {
 void publishOfflinedata() {
     String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
     uint16_t intervals = readFromEEPROM<uint16_t>(offlineintervaladdress);
+    int Frequency = intervals*15;
     StaticJsonDocument<512> jsonDoc;
     jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID
     jsonDoc["voltage"] = 0;
     jsonDoc["data"] = "log";  // Add device ID
+    jsonDoc["freq"] = Frequency;  // Add device ID
+    jsonDoc["status"] = "111111";  // Add device ID
     jsonDoc["intervals"] = intervals;
     for (int i = 0; i < 6; i++) {
         String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.

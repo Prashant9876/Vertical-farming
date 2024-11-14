@@ -4,8 +4,8 @@
 
 #include <Arduino.h>
 #include <WiFi.h>          // Include the appropriate Wi-Fi library
-#undef MQTT_MAX_PACKET_SIZE
-#define MQTT_MAX_PACKET_SIZE 512
+// #undef MQTT_MAX_PACKET_SIZE
+// #define MQTT_MAX_PACKET_SIZE 512
 #include <PubSubClient.h>
 #include <WiFiClient.h>
 

@@ -72,7 +72,7 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
                             Serial.printf("HTTP error code: %d\n", httpCode);
                         }
 
-                        httpClient.end();  // End the OTA HTTP connection
+                        // httpClient.end();  // End the OTA HTTP connection
                     } else {
                         Serial.println("Unable to begin OTA HTTP request.");
                     }
@@ -86,11 +86,42 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
             Serial.println("Failed to get version info from S3.");
         }
 
+        String DeviceIDS = readStringFromEEPROM(DEVICEID_ADDR);
+        String MFCODE_String = readStringFromEEPROM(MFCODE_ADDR);
+
+        String url = "https://office.api.epviconnect.com/api/device_tracking/";
+        http.begin(url);
+        http.addHeader("Content-Type", "application/json");
+        http.addHeader("X-API-Key", "skdjcnksjnckjscnskjdnsidcoiscsoNDOnidnoDNODindonon");  // Replace with your actual API key
+
+        // Create JSON object
+        StaticJsonDocument<200> jsonDoc;
+        jsonDoc["device_id"] = DeviceIDS;
+        jsonDoc["mf_code"] = MFCODE_String;
+        jsonDoc["device_mac_address"] =  WiFi.macAddress();
+        jsonDoc["device_client_id"] = WiFi.macAddress();
+        jsonDoc["version"] = currentVersion;
+        String payload;
+        serializeJson(jsonDoc, payload);
+        Serial.println("Version Details : " + payload);
+        int httpResponseCode = http.POST(payload);
+        if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("Response code: " + String(httpResponseCode));
+        Serial.println("Response: " + response);
+        } else {
+        Serial.println("Error in sending POST request");
+        Serial.println("HTTP response code: " + String(httpResponseCode));
+        }
+
         httpClient.end();  // Close the connection
     } else {
         Serial.println("WiFi not connected.");
     }
+
+
 }
+
 
 
 

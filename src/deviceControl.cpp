@@ -34,7 +34,11 @@ void readRelayStatesFromEEPROM() {
     for (int i = 0; i < 6; ++i) {
         relayStates[i] = readFromEEPROM<bool>(RelayAddresses[i]);
         Serial.println("Relay " + String(i + 1) + ": " + String(relayStates[i]));
-        if (relayStates[i]){
+        if (!relayStates[i]){
+            digitalWrite(relayPins[i],HIGH);
+            delay(1000);
+        }
+        else {
             digitalWrite(relayPins[i],LOW);
             delay(1000);
         }
