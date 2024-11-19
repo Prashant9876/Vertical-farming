@@ -8,6 +8,7 @@
 #include "Variable.h"
 #include "network.h"
 #include "eepromFile.h"
+#include "Hlw.h"
 
 WebServer server(80);
 

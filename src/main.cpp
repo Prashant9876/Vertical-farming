@@ -9,19 +9,21 @@
 #include <ArduinoOTA.h>
 #include "httpRoutes.h"
 #include <WebServer.h>
+#include "Hlw.h"
 
 
 bool shouldRestart = false;
 float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
 const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
-const char *currentVersion = "4.0.0";
+const char *currentVersion = "8.0.0";
 bool Hflag = false;
 
 unsigned long currentMillis; 
 unsigned long previousMillis = 0; // Stores the last time the internet was checked
 const unsigned long wifiCheckInterval = 60000; // 1 minute in milliseconds
 unsigned long previousMillisPublishIrms=0;
+unsigned long  previousMillisPublishVol = 0;
 
 
 
@@ -86,10 +88,13 @@ void readOfflineFlag() {
 
 void setup() {
   Serial.begin(115200);
+  pinMode(TIMER_PIN, OUTPUT);
+  digitalWrite(TIMER_PIN, HIGH);
   initEEPROM();
   CheckEpromData();
   initRelays();
   initCT();
+  initHLW();
   readRelayStatesFromEEPROM();
   readCtCutoffFromEEPROM();
   readOfflineFlag();
@@ -113,6 +118,16 @@ void setup() {
 void loop() {
   currentMillis = millis();
   checkWiFiConnection();
+
+  if (currentMillis - previousMillisPublishVol >= 5000) {
+    previousMillisPublishVol = currentMillis;
+    Serial.print("[HLW] Active Power (W)    : "); Serial.println(hlw8012.getActivePower());
+    Serial.print("[HLW] Voltage (V)         : "); Serial.println(hlw8012.getVoltage());
+    double current = hlw8012.getCurrent();
+    Serial.print("[HLW] Current (A)         : ");
+    Serial.println(current, 3);
+  }
+
   if (currentMillis - previousMillisPublishIrms >= 15000) {
     previousMillisPublishIrms = currentMillis;
     if (!publishIrmsData()){

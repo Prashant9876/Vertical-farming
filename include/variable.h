@@ -22,6 +22,18 @@
 
 #define TIMER_PIN 12
 
+
+#define SEL_PIN                         5
+#define CF1_PIN                         13
+#define CF_PIN                          14
+
+#define CURRENT_MODE                    HIGH
+
+#define CURRENT_RESISTOR                0.001789
+#define VOLTAGE_RESISTOR_UPSTREAM       ( 5 * 470000 ) // Real: 2280k
+#define VOLTAGE_RESISTOR_DOWNSTREAM     ( 1000 ) // Real 1.009k
+
+
 #define led_Pin 2
 
 #define CT_PIN_1  36  // Sensor 1 input pin

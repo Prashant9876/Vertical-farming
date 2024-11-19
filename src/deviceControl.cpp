@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include "otaControl.h"
 #include "Mqtt.h"
+#include "Hlw.h"
 
 
 
@@ -25,9 +26,8 @@ void initRelays(){
     pinMode(RELAY_PIN_4, OUTPUT);
     pinMode(RELAY_PIN_5, OUTPUT);
     pinMode(RELAY_PIN_6, OUTPUT);
-    pinMode(TIMER_PIN, OUTPUT);
     pinMode(led_Pin, OUTPUT);
-    digitalWrite(TIMER_PIN, HIGH);
+   
 }
 
 void readRelayStatesFromEEPROM() {

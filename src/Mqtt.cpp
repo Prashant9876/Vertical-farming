@@ -9,6 +9,7 @@
 #include "ctValues.h"
 #include "otaControl.h"
 #include "network.h"
+#include "Hlw.h"
 
 unsigned long timeoutDuration = 1 * 60 * 1000;
 unsigned long lastPublishTime = 0;
@@ -223,6 +224,7 @@ bool publishIrmsData() {
     instantrmsvalue();
     String deviceId_str  =  readStringFromEEPROM(DEVICEID_ADDR);
     String relayState = ""; 
+    unsigned int voltagee = hlw8012.getVoltage();
     for (int i = 0; i < 6; i++) {
         if (relayStates[i]) {
             relayState += "1";  // If the relay is ON (true), add '1'
@@ -236,7 +238,8 @@ bool publishIrmsData() {
     lastPublishTime = currentMillis;
     float elapsedTime12 = elapsedTime/1000;
     jsonDoc["deviceid"] = deviceId_str.c_str();  // Add device ID 
-    jsonDoc["voltage"] = "0";
+    jsonDoc["V"] = currentVersion;
+    jsonDoc["voltage"] = String(voltagee);
     // Add IrmsTotal values as separate fields
     for (int i = 0; i < 6; i++) {
         String fieldName = "current" + String(i + 1); // Create field names: current1, current2, etc.
