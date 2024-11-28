@@ -13,6 +13,9 @@ extern uint8_t ctofflinedataaddress[6];
 extern uint16_t offlineintervaladdress;
 extern bool mqttFlag;
 extern bool mqttFlagAddress;
+extern uint8_t ctcalibrationmodeAddress[4];
+extern uint8_t ctmodeSelectionAddress;
+extern uint8_t  currentMultiplierFactor;
 
 void initRelays();
 void readRelayStatesFromEEPROM();

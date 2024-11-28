@@ -92,7 +92,7 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                 const char* command = doc["command"];
                 
                 if (String(command) == "enquireip") {
-                    StaticJsonDocument<256> jsonDoc;
+                    StaticJsonDocument<350> jsonDoc;
                     jsonDoc["mac_address"] = String(ESP.getEfuseMac(), HEX);
                     jsonDoc["wifi"] = readStringFromEEPROM(SSID_ADDR);
                     jsonDoc["password"] = readStringFromEEPROM(PASSWORD_ADDR);
@@ -100,6 +100,8 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                     jsonDoc["deviceid"] = readStringFromEEPROM(DEVICEID_ADDR);
                     jsonDoc["mfcode"] = readStringFromEEPROM(MFCODE_ADDR);
                     jsonDoc["mqttClientId"] =  WiFi.macAddress();
+                    jsonDoc["wifIP"] = WiFi.localIP();
+                    jsonDoc["current_multiplier_factor"] =readFromEEPROM<float>(currentMultiplierFactor);
                     String response;
                     serializeJson(jsonDoc, response);
                     
@@ -179,7 +181,11 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
 
                 } else if  (String(command) == "ota") {
                     const String url = doc["otaurl"];
-                    checkAndUpdateFirmware(url,currentVersion);
+                    // client.disconnect();
+                    // espClient.stop();
+                    //checkAndUpdateFirmware(url,currentVersion);
+                    checkAndUpdateFirmwareMqtt(url);
+                    ESP.restart();
 
                 } else if  (String(command) == "deviceid") {
                     String deviceid = doc["deviceid"];
@@ -187,6 +193,51 @@ void callback(char* topic, byte* payload, unsigned int length) {   //// this is 
                     delay(100);
                     shouldRestart = true;
 
+                } 
+                else if  (String(command) == "ctcalvalueinfo") {
+                    StaticJsonDocument<256> jsonDoc;
+                    jsonDoc["deviceid"] = readStringFromEEPROM(DEVICEID_ADDR);
+                    jsonDoc["ctDefault"] = calDefault;
+                    jsonDoc["ctcal1"] = readFromEEPROM<float>(ctcalibrationmodeAddress[0]);
+                    jsonDoc["ctcal2"] = readFromEEPROM<float>(ctcalibrationmodeAddress[1]);
+                    jsonDoc["ctcal3"] = readFromEEPROM<float>(ctcalibrationmodeAddress[2]);
+                    jsonDoc["ctcal4"] = readFromEEPROM<float>(ctcalibrationmodeAddress[3]);
+                    jsonDoc["ctcalMode"] = readFromEEPROM<float>(ctmodeSelectionAddress);
+
+                    String response;
+                    serializeJson(jsonDoc, response);
+                    String Deviceid1 = readStringFromEEPROM(DEVICEID_ADDR);
+                    String alertTopicFull = String(alertTopic) + Deviceid1;  
+                    client.publish(alertTopicFull.c_str(),response.c_str());
+
+                } else if  (String(command) == "addCtCalValue") {
+                    int elementsNo = doc["ctcalnum"].as<int>();
+                    float calibration = doc["calNum"].as<float>();
+                    int elementnumber = elementsNo -1;
+                    storeFloatInEEPROM(ctcalibrationmodeAddress[elementnumber],calibration);
+                    if (doc.containsKey("set") && doc["set"] == 1) {
+                        int generatedNumber =  elementsNo + 10;
+                        writeIntToEEPROM(ctmodeSelectionAddress, generatedNumber);
+                        shouldRestart = true;
+                    } 
+                }  else if  (String(command) == "setCTCalMode") {
+                    int elementsNo = doc["ctmode"].as<int>();
+                    if (elementsNo == 0){
+                        writeIntToEEPROM(ctmodeSelectionAddress, elementsNo);
+                    }
+                    else if (elementsNo == 1 || elementsNo == 2 || elementsNo == 3){
+                        elementsNo = elementsNo +10;
+                        writeIntToEEPROM(ctmodeSelectionAddress, elementsNo);
+                    }
+                    else {
+                        Serial.println("invalid CtCal Mode");
+                    }
+                    shouldRestart = true;
+                } else if (String(command) == "SetCurrentMultiplierfactor"){
+                    float CurrentMultiplierfactor = doc["currentmultiplierFactor"].as<float>();
+                    Serial.println("CurrentMultiplierfactor : "+ String(CurrentMultiplierfactor));
+                    storeFloatInEEPROM(currentMultiplierFactor,CurrentMultiplierfactor);
+                    shouldRestart = true;
                 } else {
                     Serial.println(F("invalid Mqtt command"));
                 }

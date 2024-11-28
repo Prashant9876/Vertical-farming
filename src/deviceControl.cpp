@@ -18,6 +18,10 @@ uint8_t ctofflinedataaddress[6] = {19,23,27,31,35,39};  // offline float ct valu
 uint16_t offlineintervaladdress = 44;
 bool mqttFlag;
 bool mqttFlagAddress = 47;
+uint8_t ctcalibrationmodeAddress[4] = {50,55,59,63};  //value save upto  66
+uint8_t ctmodeSelectionAddress = 67; 
+uint8_t  currentMultiplierFactor = 71;
+
 
 void initRelays(){
     pinMode(RELAY_PIN_1, OUTPUT);

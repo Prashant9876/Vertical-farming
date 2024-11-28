@@ -10,6 +10,7 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
 void otaProgress(const int current, const int total);
 void otaport();
 void  initOTA();
+void checkAndUpdateFirmwareMqtt(const String &binUrl);
 
 
 #endif

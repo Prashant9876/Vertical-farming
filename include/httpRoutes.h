@@ -11,5 +11,10 @@ void handleHttpClient();
 void handleConfiguration();
 void handleconfigMFID();
 void handleconfigDeviceID();
+void otaDevice();
+void handleaddCtCalValue();
+void handlectcalvalueinfo();
+void handlesetCTCalMode();
+void handlecurrentmultipliervalue();
 
 #endif

@@ -16,7 +16,7 @@ bool shouldRestart = false;
 float Irms[6];         // Array for storing current sensor values
 float IrmsTotal[6] = {0}; 
 const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
-const char *currentVersion = "8.0.0";
+const char *currentVersion = "9.0.0";
 bool Hflag = false;
 
 unsigned long currentMillis; 
@@ -90,10 +90,12 @@ void setup() {
   Serial.begin(115200);
   pinMode(TIMER_PIN, OUTPUT);
   digitalWrite(TIMER_PIN, HIGH);
+  Serial.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<New code >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
   initEEPROM();
   CheckEpromData();
   initRelays();
   initCT();
+  checkcurrentMultiplier();
   initHLW();
   readRelayStatesFromEEPROM();
   readCtCutoffFromEEPROM();
@@ -107,9 +109,7 @@ void setup() {
       initMqtt();
       reconnect();
     }
-    // digitalWrite(2,LOW);
   }
-  // void initBT();
   initOTA();
   initializeRoutes();
 

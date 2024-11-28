@@ -166,3 +166,54 @@ void  initOTA() {
 void otaport(){
     ArduinoOTA.handle();
 }
+
+
+void checkAndUpdateFirmwareMqtt(const String &binUrl) {
+    if (WiFi.status() == WL_CONNECTED) {
+        HTTPClient httpClient;  // Reusing the same HTTPClient for OTA download
+
+        // Set a timeout for the HTTP requests (in milliseconds)
+        httpClient.setTimeout(15000);  // Timeout of 15 seconds (can be adjusted)
+
+        // Start OTA download with the provided binUrl
+        if (httpClient.begin(binUrl)) {  // Start OTA download with the given binary URL
+            int httpCode = httpClient.GET();
+            Serial.printf("HTTP GET result: %d\n", httpCode);
+
+            if (httpCode == HTTP_CODE_OK) {
+                size_t contentLength = httpClient.getSize();
+                bool canBegin = Update.begin(contentLength, U_FLASH);
+
+                if (canBegin) {
+                    Serial.println("Begin OTA. Please wait...");
+
+                    WiFiClient *client = httpClient.getStreamPtr();
+                    size_t written = Update.writeStream(*client);
+
+                    if (written == contentLength && Update.end()) {
+                        if (Update.isFinished()) {
+                            Serial.println("Update successfully completed. Rebooting...");
+                            ESP.restart();  // Restart after successful OTA
+                        } else {
+                            Serial.println("Update not finished. Something went wrong.");
+                        }
+                    } else {
+                        Serial.println("Error during OTA update.");
+                        Serial.printf("Error #: %d\n", Update.getError());
+                    }
+                } else {
+                    Serial.println("Unable to begin OTA Update.");
+                }
+            } else {
+                Serial.printf("HTTP error code: %d\n", httpCode);
+            }
+
+            httpClient.end();  // End the OTA HTTP connection
+        } else {
+            Serial.println("Unable to begin OTA HTTP request.");
+        }
+
+    } else {
+        Serial.println("WiFi not connected.");
+    }
+}

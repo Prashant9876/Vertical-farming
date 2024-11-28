@@ -6,9 +6,11 @@
 
 extern float Irms[6];        
 extern float IrmsTotal[6]; 
+extern double calDefault;
 
 void initCT();
 void instantrmsvalue();
-// void accumulateIrmsValues();
+float CtCalibrations ();
+void checkcurrentMultiplier();
 
 #endif // CTVALUES_H
