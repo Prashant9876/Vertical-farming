@@ -5,54 +5,54 @@
 #include <WiFi.h>
 #include "otaControl.h"
 #include "Mqtt.h"
-#include "Hlw.h"
+#include <Wire.h>
+#include <Adafruit_AHTX0.h>
 
+float temperature = 0.00;
+float humidityss = 0.00;
 
-
-bool relayStates[6];
-uint8_t maxLoadOnCt[6] ={15,15,15,15,15,15};
-uint8_t RelayAddresses[6] = {1,2,3,4,5,6};
-uint8_t ctloadddresses[6] = {7,9,11,13,15,17};
-uint8_t relayPins[6] = {RELAY_PIN_1, RELAY_PIN_2, RELAY_PIN_3, RELAY_PIN_4, RELAY_PIN_5, RELAY_PIN_6};
-uint8_t ctofflinedataaddress[6] = {19,23,27,31,35,39};  // offline float ct values eeprom address from 19 to 42 
-uint16_t offlineintervaladdress = 44;
-bool mqttFlag;
-bool mqttFlagAddress = 47;
-uint8_t ctcalibrationmodeAddress[4] = {50,55,59,63};  //value save upto  66
-uint8_t ctmodeSelectionAddress = 67; 
-uint8_t  currentMultiplierFactor = 71;
+Adafruit_AHTX0 aht;
 
 
 void initRelays(){
     pinMode(RELAY_PIN_1, OUTPUT);
     pinMode(RELAY_PIN_2, OUTPUT);
-    pinMode(RELAY_PIN_3, OUTPUT);
-    pinMode(RELAY_PIN_4, OUTPUT);
-    pinMode(RELAY_PIN_5, OUTPUT);
-    pinMode(RELAY_PIN_6, OUTPUT);
     pinMode(led_Pin, OUTPUT);
    
 }
 
-void readRelayStatesFromEEPROM() {
-    for (int i = 0; i < 6; ++i) {
-        relayStates[i] = readFromEEPROM<bool>(RelayAddresses[i]);
-        Serial.println("Relay " + String(i + 1) + ": " + String(relayStates[i]));
-        if (!relayStates[i]){
-            digitalWrite(relayPins[i],HIGH);
-            delay(1000);
-        }
-        else {
-            digitalWrite(relayPins[i],LOW);
-            delay(1000);
-        }
+void setupAHT10(){
+    if (!aht.begin()) {
+    Serial.println("Failed to find AHT10 sensor.");
     }
+    Serial.println("AHT10 Sensor Found");
 }
 
-void readCtCutoffFromEEPROM() {
-    
-    for (int i = 0; i < 6; ++i) {
-        maxLoadOnCt[i] = readFromEEPROM<u8_t>(ctloadddresses[i]);
-        delay(100);
-    }
+int readLDR() {
+    int ldrValue = analogRead(LDR_PIN);  // Light intensity
+    Serial.print("LDR Value: ");
+    Serial.println(ldrValue);
+    return ldrValue;
+
+}
+
+void readAndPrintAHT10Data() {
+    sensors_event_t humidity, temp;
+    aht.getEvent(&humidity, &temp);
+    temperature = temp.temperature;
+    humidityss = humidity.relative_humidity;
+    Serial.print("🌡️ Temperature: ");
+    Serial.print(temp.temperature);
+    Serial.println(" °C");
+
+    Serial.print("💧 Humidity: ");
+    Serial.print(humidity.relative_humidity);
+    Serial.println(" %");
+}
+
+float Co2data (){
+    int mq9Value = analogRead(MQ9_PIN);
+    Serial.print("MQ9 Value: ");
+    Serial.println(mq9Value);
+    return mq9Value;
 }

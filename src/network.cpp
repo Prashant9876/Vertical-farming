@@ -7,21 +7,18 @@
 
 
 bool connectToWiFi() {
-    #ifdef DEBUG_ENABLED
     Serial.println("Connecting to WiFi...");
-    #endif
-    String ssid_str= readStringFromEEPROM(SSID_ADDR);
-    String pwd_str =  readStringFromEEPROM(PASSWORD_ADDR);
-    WiFi.begin(ssid_str.c_str(), pwd_str.c_str());
+    String ssid= readStringFromEEPROM(SSID_ADDR);
+    String pwd =  readStringFromEEPROM(PASSWORD_ADDR);
+    WiFi.begin(ssid.c_str(),pwd.c_str());
     
     int attempts = 0;  // Keep track of connection attempts
     while (WiFi.status() != WL_CONNECTED && attempts < 40) {
         WiFi.setSleep(false); 
         digitalWrite(led_Pin, HIGH);
-        delay(100);
+        delay(400);
         digitalWrite(led_Pin, LOW);
-        delay(100);
-        delay(300);
+        delay(200);
         Serial.print(".");
         attempts++;
     }
@@ -57,25 +54,21 @@ void initHotspot() {
         Apid = mfidAP.c_str();
     }
     else {
-        Apid = "EPVI";
+        Apid = "ABCD";
     }
 
     // Initialize the hotspot (Access Point) with SSID and Password
-    if (!WiFi.softAP(Apid, "EPVI12345")) {
-        #ifdef DEBUG_ENABLED
+    if (!WiFi.softAP(Apid, "ABCD12345")) {
         Serial.println("Failed to create AP");
-        #endif
         return;
     }
 
     // Get and print the IP address of the hotspot
     IPAddress IP = WiFi.softAPIP();
-    #ifdef DEBUG_ENABLED
     Serial.println("Hotspot created successfully.");
     Serial.println("SSID: " + String(Apid));
     Serial.print("IP Address: ");
     Serial.println(IP);
-    #endif
 }
 
 void deactivateHotspot() {

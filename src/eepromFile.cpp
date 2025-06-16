@@ -22,14 +22,13 @@ void CheckEpromData() {
   String ssid = readStringFromEEPROM(SSID_ADDR);
   String  pwd = readStringFromEEPROM(PASSWORD_ADDR);
   String deviceId = readStringFromEEPROM(DEVICEID_ADDR);
+  
   String mfid = readStringFromEEPROM(MFCODE_ADDR);
   if (!isValidString(ssid)) {
-    saveToEEPROM(SSID_ADDR,"EPVI");
     Sflag = true;
     
   }
   if (!isValidString(pwd)) {
-    saveToEEPROM(PASSWORD_ADDR,"EPVI12345");
   }
   if (!isValidString(deviceId)) {
     Dflag = true;

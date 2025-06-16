@@ -14,9 +14,9 @@
 void initMqtt ();
 void callback(char* topic, byte* payload, unsigned int length);
 void initMqtt();
-bool publishIrmsData();
+bool publishVfData();
 void reconnect();
 void mqttLoop();
-void publishOfflinedata();
+
 
 #endif

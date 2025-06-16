@@ -5,27 +5,20 @@
 #include "otaControl.h"
 #include "network.h"
 #include "Mqtt.h"
-#include "ctValues.h"
 #include <ArduinoOTA.h>
 #include "httpRoutes.h"
 #include <WebServer.h>
-#include "Hlw.h"
 
 
 bool shouldRestart = false;
-float Irms[6];         // Array for storing current sensor values
-float IrmsTotal[6] = {0}; 
-const String &versionUrl = "https://elog-device-ota.s3.ap-south-1.amazonaws.com/ota_meta_data/version.json";
-const char *currentVersion = "9.0.0";
+const String &versionUrl = "paste you json link here";
+const char *currentVersion = "1.0.0";
 bool Hflag = false;
 
 unsigned long currentMillis; 
 unsigned long previousMillis = 0; // Stores the last time the internet was checked
 const unsigned long wifiCheckInterval = 60000; // 1 minute in milliseconds
-unsigned long previousMillisPublishIrms=0;
-unsigned long  previousMillisPublishVol = 0;
-
-
+unsigned long previousMillisPublishVF=0;
 
 
 void checkWiFiConnection() {
@@ -48,94 +41,36 @@ void checkWiFiConnection() {
   }
 }
 
-void resetIrmsValue(){
-  for (int i = 0; i <6; i++) {
-    Irms[i] = 0; // Set each element to 0
-  }
-}
 
-void updateOfflineData() {
-  for (int i = 0; i < 6; i++) {
-    // Read the existing float value from EEPROM at the specified address
-    float offlineValue = readFromEEPROM<float>(ctofflinedataaddress[i]);
-    // Add the current Irms value to the retrieved offline data
-    if (isnan(offlineValue) || offlineValue < 0 ){
-      offlineValue = 0.00;
-    }
-    // Serial.println("offlineValue : "+ String(offlineValue));
-    
-    offlineValue += Irms[i];
-    // Write the updated value back to EEPROM at the same address
-    storeFloatInEEPROM(ctofflinedataaddress[i], offlineValue);
-    // Print the updated value for verification
-    // Serial.print("Updated value at address ");
-    // Serial.print(ctofflinedataaddress[i]);
-    // Serial.print(": ");
-    // Serial.println(offlineValue);
-    delay(200);
-  }
-
-// code for incremental of inteerval in offline data store 
-  uint16_t intervalCout = readFromEEPROM<uint16_t>(offlineintervaladdress);
-  intervalCout += 1;
-  writeIntToEEPROM(offlineintervaladdress, intervalCout);
-}
-
-void readOfflineFlag() {
-  mqttFlag = readBoolFromEEPROM(mqttFlagAddress);
-
-}
 
 void setup() {
   Serial.begin(115200);
-  pinMode(TIMER_PIN, OUTPUT);
-  digitalWrite(TIMER_PIN, HIGH);
-  Serial.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<New code >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+  Serial.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< restart >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
   initEEPROM();
   CheckEpromData();
   initRelays();
-  initCT();
-  checkcurrentMultiplier();
-  initHLW();
-  readRelayStatesFromEEPROM();
-  readCtCutoffFromEEPROM();
-  readOfflineFlag();
-  if (!Sflag &&!connectToWiFi()){
+  if (Sflag &&!connectToWiFi()){
     initHotspot();
     Hflag = true;
   } else{
     checkAndUpdateFirmware(versionUrl,currentVersion);
-    if (!Dflag && !Mflag ) {
-      initMqtt();
-      reconnect();
-    }
+    initMqtt();
+    reconnect();
   }
+  setupAHT10();
   initOTA();
   initializeRoutes();
-
 }
 
 void loop() {
   currentMillis = millis();
   checkWiFiConnection();
 
-  if (currentMillis - previousMillisPublishVol >= 5000) {
-    previousMillisPublishVol = currentMillis;
-    Serial.print("[HLW] Active Power (W)    : "); Serial.println(hlw8012.getActivePower());
-    Serial.print("[HLW] Voltage (V)         : "); Serial.println(hlw8012.getVoltage());
-    double current = hlw8012.getCurrent();
-    Serial.print("[HLW] Current (A)         : ");
-    Serial.println(current, 3);
-  }
-
-  if (currentMillis - previousMillisPublishIrms >= 15000) {
-    previousMillisPublishIrms = currentMillis;
-    if (!publishIrmsData()){
-      mqttFlag = true;
-      writeBoolToEEPROM(mqttFlagAddress,1);
-      updateOfflineData();
+  if (currentMillis - previousMillisPublishVF >= 15000) {
+    previousMillisPublishVF = currentMillis;
+    if (!publishVfData()){
+      Serial.println("Data not send to Mqtt zserver!!!!!!!");
     }
-    resetIrmsValue();
   } 
   if (shouldRestart) {
     delay(1000);

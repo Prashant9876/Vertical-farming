@@ -1,5 +1,5 @@
 #include "otaControl.h"
-#include "Variable.h"
+#include "variable.h"
 #include "eepromFile.h"
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -18,7 +18,7 @@ HTTPClient http;
 
 void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion )  {
     if (WiFi.status() == WL_CONNECTED) {
-        HTTPClient httpClient;  // Reusing the same HTTPClient for both version check and OTA
+        HTTPClient httpClient; 
         httpClient.begin(versionUrl);
         int httpCode = httpClient.GET();
 
@@ -30,17 +30,15 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
             if (!error) {
                 String latestVersion = jsonDocument["version"].as<String>();
                 String binUrl = jsonDocument["bin_url"].as<String>();
-                httpClient.end();  // Close the connection after getting version info
+                httpClient.end();  
 
                 Serial.print("Latest version: ");
                 Serial.println(latestVersion);
 
-                // Assuming the current version is available in a variable 'currentVersion'
                 if (latestVersion != "" && latestVersion != currentVersion) {
                     Serial.println("New version available. Starting OTA update...");
 
-                    // Reuse the same httpClient instance for OTA
-                    if (httpClient.begin(binUrl)) {  // Start OTA download with the same HTTPClient
+                    if (httpClient.begin(binUrl)) {  
                         int httpCode = httpClient.GET();
                         Serial.printf("HTTP GET result: %d\n", httpCode);
 
@@ -57,7 +55,7 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
                                 if (written == contentLength && Update.end()) {
                                     if (Update.isFinished()) {
                                         Serial.println("Update successfully completed. Rebooting...");
-                                        ESP.restart();  // Restart after successful OTA
+                                        ESP.restart();  
                                     } else {
                                         Serial.println("Update not finished. Something went wrong.");
                                     }
@@ -72,7 +70,6 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
                             Serial.printf("HTTP error code: %d\n", httpCode);
                         }
 
-                        // httpClient.end();  // End the OTA HTTP connection
                     } else {
                         Serial.println("Unable to begin OTA HTTP request.");
                     }
@@ -86,35 +83,7 @@ void checkAndUpdateFirmware(const String &versionUrl,const char * currentVersion
             Serial.println("Failed to get version info from S3.");
         }
 
-        String DeviceIDS = readStringFromEEPROM(DEVICEID_ADDR);
-        String MFCODE_String = readStringFromEEPROM(MFCODE_ADDR);
-
-        String url = "https://office.api.epviconnect.com/api/device_tracking/";
-        http.begin(url);
-        http.addHeader("Content-Type", "application/json");
-        http.addHeader("X-API-Key", "skdjcnksjnckjscnskjdnsidcoiscsoNDOnidnoDNODindonon");  // Replace with your actual API key
-
-        // Create JSON object
-        StaticJsonDocument<200> jsonDoc;
-        jsonDoc["device_id"] = DeviceIDS;
-        jsonDoc["mf_code"] = MFCODE_String;
-        jsonDoc["device_mac_address"] =  WiFi.macAddress();
-        jsonDoc["device_client_id"] = WiFi.macAddress();
-        jsonDoc["version"] = currentVersion;
-        String payload;
-        serializeJson(jsonDoc, payload);
-        Serial.println("Version Details : " + payload);
-        int httpResponseCode = http.POST(payload);
-        if (httpResponseCode > 0) {
-        String response = http.getString();
-        Serial.println("Response code: " + String(httpResponseCode));
-        Serial.println("Response: " + response);
-        } else {
-        Serial.println("Error in sending POST request");
-        Serial.println("HTTP response code: " + String(httpResponseCode));
-        }
-
-        httpClient.end();  // Close the connection
+        httpClient.end();  
     } else {
         Serial.println("WiFi not connected.");
     }
