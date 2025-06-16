@@ -32,6 +32,8 @@ void CheckEpromData() {
   }
   if (!isValidString(deviceId)) {
     Dflag = true;
+    String DeviceidRand = "alpha1234";
+    saveToEEPROM(DEVICEID_ADDR, DeviceidRand);
     Serial.println("deviceidFlag "+String(Dflag));
   }
   if (!isValidString(mfid)) {

@@ -68,7 +68,7 @@ void loop() {
 
   if (currentMillis - previousMillisPublishVF >= 15000) {
     previousMillisPublishVF = currentMillis;
-    if (!publishVfData()){
+    if (isWifiConnected() &&!publishVfData()){
       Serial.println("Data not send to Mqtt zserver!!!!!!!");
     }
   } 
@@ -80,6 +80,6 @@ void loop() {
   otaport();
   handleHttpClient();
   delay(1000);
-  
+
 }
 

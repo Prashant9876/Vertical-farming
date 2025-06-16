@@ -14,11 +14,8 @@ unsigned long lastPublishTime = 0;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// const char *mqttServer = "epvi-emqx.in";
 const char* mqttServer = "broker.emqx.io";  // EMQX MQTT Broker
 const int mqttPort = 1883;
-// const char *mqttUser = "device_enlog";
-// const char *mqttPassword = "jhjhJHVDJvjayushJKbkhjdvbkjdbkjdndkjbkjdbckdhskudcbkjdcbskjcbslkcjbsdljkcb";
 
 const char *publishTopic = "publish/send987679";
 const char* mqtt_topic_sub = "sub/receive987679";  // Topic to receive messages

@@ -10,7 +10,9 @@ bool connectToWiFi() {
     Serial.println("Connecting to WiFi...");
     String ssid= readStringFromEEPROM(SSID_ADDR);
     String pwd =  readStringFromEEPROM(PASSWORD_ADDR);
-    WiFi.begin(ssid.c_str(),pwd.c_str());
+    // WiFi.begin(ssid.c_str(),pwd.c_str());
+    WiFi.begin("Prashant_4G","123456pk#");
+    
     
     int attempts = 0;  // Keep track of connection attempts
     while (WiFi.status() != WL_CONNECTED && attempts < 40) {
